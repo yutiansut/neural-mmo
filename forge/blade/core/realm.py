@@ -154,7 +154,8 @@ class Realm(Timed):
          packets[entID].stim = ent
          if self.postmortem(ent, dead):
             packets[entID].stim   = ent
-            packets[entID].reward = -1
+            #packets[entID].reward = -1
+            packets[entID].reward = ent.history.timeAlive.val
             packets[entID].done   = True
          else:
             packets[entID].reward = 0

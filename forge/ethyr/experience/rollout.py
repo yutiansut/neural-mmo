@@ -24,7 +24,7 @@ class Rollout:
       #assert self.time == len(self.stims)
       return self.blob.lifetime
 
-   def discount(self, gamma=0.98):
+   def discount(self, gamma=0.975):
       '''Applies standard gamma discounting to the given trajectory
       
       Args:
@@ -68,7 +68,7 @@ class Rollout:
 
    def finish(self):
       '''Called internally once the full rollout has been collected'''
-      assert self.rewards[-1] == -1
+      #assert self.rewards[-1] == -1
       self.returns  = self.discount()
       self.lifespan = len(self.rewards)
 

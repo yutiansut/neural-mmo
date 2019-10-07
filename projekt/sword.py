@@ -7,13 +7,14 @@ import projekt
 from forge import trinity
 
 from forge.blade.core import realm
+from forge.blade.lib.log import Blob, BlobSummary
 
 from forge.ethyr.io import Stimulus, Action
 from forge.ethyr.experience import RolloutManager
 from forge.ethyr.torch import Model, optim
-from forge.ethyr.torch.param import setParameters
+from forge.ethyr.torch.param import setParameters, getParameters
 
-from forge.ethyr.io.io import Output
+from forge.ethyr.io.io import IO, Output
 
 from copy import deepcopy
 
@@ -41,10 +42,14 @@ class Sword(Ascend):
 
       self.keys = set()
 
-      self.net = projekt.ANN(self.config)
-      #self.ents = {}
-      self.manager = RolloutManager()
+      self.params   = None 
 
+      self.reward   = {}
+      self.noise    = {}
+      self.net      = {}
+      self.blobs    = {}
+      self.summary  = BlobSummary()
+   
    @runtime
    def step(self, obs, packet=None):
       '''Synchronizes weights from upstream; computes
@@ -59,79 +64,81 @@ class Sword(Ascend):
          2. Currently specifying retain_graph. This should not be
          required with batch size 1, even with the above bug.
       '''
-      '''
-      ids = set()
-      n = 96833
+      actions = {}
+      n       = 96833
+      config  = self.config
+
+      #Update base parmeters
+      if packet is not None:
+         self.params = packet
       
-      #Add new nets
       for ob in obs:
          iden = ob.entID
-         ids.add(iden)
 
-         net = self.net[iden]
+         #Add new network
          if iden not in self.net:
-            net['ann'] = project.ANN(self.config)
+            noise = config.ES_STD * np.random.randn(n)
 
+            self.noise[iden] = noise
+            self.net[iden]   = projekt.ANN(config)
+            self.blobs[iden] = Blob(ob.entID, ob.annID)
 
-            noise = 0.1 * np.random.randn(n)
-            net['noise'] = noise
+            setParameters(self.net[iden], self.params + noise)
+         self.blobs[iden].update()
 
-            params = getParameters(self.net[iden])
-            setParameters(self.net[iden]), params + noise)
-
+         #Finish old networks
          if ob.done:
-            net['reward'] = ob.reward 
-            
+            self.reward[iden] = ob.reward 
 
-      #Remove old nets
-      for iden in self.net.keys():
-         if iden not in ids:
-            ids.remove(iden)
-      '''
+            self.summary.nRollouts += 1
+            self.summary.nUpdates  += ob.reward
+            self.summary.blobs.append(self.blobs[iden])
 
-      #Sync weights
-      if packet is not None:
-         setParameters(self.net, packet)
+            del self.net[iden]
+            del self.blobs[iden]
 
-      config  = self.config
-      actions = {}
+         #Compute forward pass
+         else:
+            key = ob.key
+            #Pseudo batch single observation
+            stim, atn = IO.batch([ob])
 
-      #Batch observations
-      self.manager.collectInputs(obs)
+            #Compute forward pass
+            atn, atnIdx, val = self.net[ob.entID](0, stim, atn)
 
-      #Compute forward pass
-      for pop, batch in self.manager.batched():
-         keys, stim, atns = batch
-
-         #Run the policy
-         atns, atnsIdx, vals = self.net(pop, stim, atns)
-
-         #Clear .backward buffers during test
-         if self.config.TEST or self.config.POPOPT:
+            #Collect output actions and values
             #atns are detached in torch/io/action
-            atnsIdx = atnsIdx.detach()
-            vals    = vals.detach()
+            atn    = atn[0]
+            atnIdx = atnIdx.detach()[0]
+            val    = val.detach()[0]
 
-         #Collect output actions and values for .backward
-         for key, atn, atnIdx, val in zip(keys, atns, atnsIdx, vals):
             out = Output(key, atn, atnIdx, val)
             actions.update(out.action)
-            self.manager.collectOutputs([out])
-         
-      #Compute backward pass and logs from rollout objects
-      #if backward:
-      if self.manager.nUpdates >= config.CLIENT_UPDATES:
-         rollouts, blobs = self.manager.step()
+            
+      #Collect updates
+      summary = self.summary
+      if summary.nUpdates >= config.CLIENT_UPDATES:
+         rewards = list(self.reward.values())
+         base_mean = np.mean(rewards)
+         base_std  = np.std(rewards)
+         self.summary = BlobSummary()
+         update = 0
 
-         if config.TEST or config.POPOPT:
-            return actions, None, blobs
+         if config.TEST:
+            return actions, None, summary  
 
-         optim.backward(rollouts, valWeight=config.VAL_WEIGHT,
-            entWeight=config.ENTROPY)#, device=config.DEVICE)
+         keys = list(self.reward.keys())
+         for iden in keys:
+            reward = self.reward[iden]
+            noise  = self.noise[iden]
 
-         grads = self.net.grads()
-         return actions, grads, blobs
+            reward = (reward - base_mean) / base_std
+            update += reward * noise / summary.nRollouts
+
+            del self.noise[iden]
+            del self.reward[iden]
+
+         return actions, update, summary
 
       return actions, None, None
-
 

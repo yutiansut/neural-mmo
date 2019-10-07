@@ -52,7 +52,7 @@ class NetTree(nn.Module):
       stim = stim.unsqueeze(1).unsqueeze(1)
       atns, atnsIdx = self.net(stim, targs, atnLens)
 
-      if self.config.TEST:
+      if self.config.TEST or self.config.OPTIM == 'ES':
          atns = atns.detach()
 
       atns = [unpack(atn, l) for atn, l in zip(atns, atnLens)]

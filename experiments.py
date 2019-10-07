@@ -17,13 +17,13 @@ class Config(config.Config):
    DEBUG    = False #Whether to run with debug settings
    HOST     = 'localhost'
 
-   LOAD = True #Load model from file?
-   BEST = True #If loading, most recent or highest lifetime?
-   TEST = True #Update the model during run?
+   LOAD = False #Load model from file?
+   BEST = False #If loading, most recent or highest lifetime?
+   TEST = False #Update the model during run?
 
    #Typically overriden in Forge.py
    NENT = 128  #Maximum population size
-   NPOP = 8  #Number of populations
+   NPOP = 1  #Number of populations
 
    NATN    = 1    #Number of actions taken by the network (deprecated)
    ENTROPY = 0.0 #Entropy bonus for policy gradient loss
@@ -31,12 +31,12 @@ class Config(config.Config):
    HIDDEN  = 32 #Model embedding dimension
    EMBED   = 32  #Model hidden dimension
  
-   NGOD   = 4 #Number of environment servers
+   NGOD   = 6 #Number of environment servers
    NSWORD = 1 #Number of clients per server
 
    #Number of experience steps before
    #syncronizing at each hardware layer
-   CLIENT_UPDATES  = 256
+   CLIENT_UPDATES  = 2560*4
    SERVER_UPDATES  = CLIENT_UPDATES
    CLUSTER_UPDATES = NGOD * CLIENT_UPDATES
 
@@ -55,6 +55,12 @@ class Config(config.Config):
 
    #Experimental population based training parameters
    #Disabled and not currently functional -- avoid modification
+   #Optim: 'GRAD', 'PBT', 'ES'
+   OPTIM    = 'ES'
+
+   ES_LR  = 1e-3
+   ES_STD = 0.05
+
    POPOPT   = False
    PERMPOPS = 4
    PERMVAL  = 1e-2

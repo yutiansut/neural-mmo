@@ -72,6 +72,32 @@ class PopulationOptimizer:
       goodParams = np.array(goodParams) + noise
       setParameters(badNet, goodParams)
 
+class EvolutionaryStrategies:
+   def __init__(self, net, config):
+      self.config = config
+      self.net    = net
+      self.opt    = None
+
+   #Grads and clip
+   def step(self, updates, logs):
+      '''Clip the provided gradients and step the optimizer
+
+      Args:
+         gradList: a list of gradients
+      '''
+      update = np.mean(updates, 0) 
+      print('Update magnitude: ', np.sqrt(np.sum(update**2)))
+
+      params = self.net.weights
+      params = params + self.config.ES_LR * update / self.config.ES_STD
+
+      self.net.parameters = Parameter(torch.Tensor(np.array(params)))
+      self.net.syncParameters()
+
+   def load(self, opt):
+      pass
+
+
 class Model:
    '''Model manager class
 
@@ -97,10 +123,13 @@ class Model:
 
       #Have been experimenting with population based
       #training. Nothing stable yet -- advise avoiding
-      if config.POPOPT:
-         self.opt = PopulationOptimizer(self, config)
-      else:
+      optim = config.OPTIM
+      if optim == 'GRAD':
          self.opt = GradientOptimizer(self, config)
+      elif optim == 'POP':
+         self.opt = PopulationOptimizer(self, config)
+      elif optim == 'ES':
+         self.opt = EvolutionaryStrategies(self, config)
 
       if config.LOAD or config.BEST:
          self.load(self.opt, config.BEST)
