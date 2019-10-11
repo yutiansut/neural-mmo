@@ -28,10 +28,10 @@ class Config(config.Config):
    NATN    = 1    #Number of actions taken by the network (deprecated)
    ENTROPY = 0.0 #Entropy bonus for policy gradient loss
 
-   HIDDEN  = 32 #Model embedding dimension
-   EMBED   = 32  #Model hidden dimension
+   HIDDEN  = 16 #Model embedding dimension
+   EMBED   = 16 #Model hidden dimension
  
-   NGOD   = 4 #Number of environment servers
+   NGOD   = 6 #Number of environment servers
    NSWORD = 1 #Number of clients per server
 
    #Number of experience steps before
