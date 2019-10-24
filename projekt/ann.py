@@ -63,18 +63,18 @@ class TileConv(nn.Module):
       self.conv1 = nn.Conv2d(h, h, 3)
       self.pool1 = nn.MaxPool2d(2)
 
-      #self.conv2 = nn.Conv2d(h, h, 3)
-      #self.pool2 = nn.MaxPool2d(2)
+      self.conv2 = nn.Conv2d(h, h, 3)
+      self.pool2 = nn.MaxPool2d(2)
  
-      self.fc1 = nn.Linear(h*6*6, h)
-      #self.fc1 = nn.Linear(h*2*2, h)
+      #self.fc1 = nn.Linear(h*6*6, h)
+      self.fc1 = nn.Linear(h*2*2, h)
 
    def forward(self, x):
       x = x.transpose(1, 2)
       x = x.view(-1, self.h, 15, 15)
-      x = self.pool1(self.conv1(x))
-      #x = self.pool1(torch.relu(self.conv1(x)))
-      #x = self.pool2(torch.relu(self.conv2(x)))
+      #x = self.pool1(self.conv1(x))
+      x = self.pool1(torch.relu(self.conv1(x)))
+      x = self.pool2(torch.relu(self.conv2(x)))
 
       batch, _, _, _ = x.shape
       x = x.view(batch, -1)
