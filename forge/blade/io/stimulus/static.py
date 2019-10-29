@@ -94,10 +94,12 @@ class Stimulus(Config):
          class Damage(node.Continuous):
             def init(self, config):
                self.default = None
+               self.scale   = 0.01
 
          class TimeAlive(node.Continuous):
             def init(self, config):
                self.default = 0
+               self.scale   = 0.01
 
       #Resources
       class Resources(Config, node.Flat):
@@ -121,6 +123,7 @@ class Stimulus(Config):
          class Freeze(node.Continuous):
             def init(self, config):
                self.default = 0
+               self.max = 3
 
          class Immune(node.Continuous):
             def init(self, config):
