@@ -98,29 +98,45 @@ def textures():
       lookup[key] = mat
    return lookup
 
-def tile(val, tex):
+def tile(val, offset):
    if val == 0:
-      return tex['lava']
+      return 'lava'
    elif val < 0.3:
-      return tex['water']
-   elif val < 0.57:
-      return tex['grass']
-   elif val < 0.715:
-      return tex['forest']
+      return 'water'
+   elif val < 0.675 - offset:
+      return 'grass'
+   elif val < 0.75 - offset/2:
+      return 'forest'
    else:
-      return tex['stone']
+      return 'stone'
 
 def material(terrain, tex, X, Y, border=9):
    terrain = deepcopy(terrain).astype(object)
    for y in range(Y):
       for x in range(X):
+         #Center coords
+         xRel = x - sz/2
+         yRel = y - sz/2
+         #mag  = np.sqrt(xRel**2 + yRel**2)
+         mag = max(abs(xRel), abs(yRel))
+
          if not inBounds(y, x, (Y, X), border-1):
-            terrain[y, x] = tex['lava']
+            mat = 'lava'
          elif not inBounds(y, x, (Y, X), border):
-            terrain[y, x] = tex['grass']
+            mat = 'grass'
+         elif np.sqrt(xRel**2 + yRel**2) < 2.5:
+            mat = 'water'
+         elif mag < 6:
+            mat = 'grass'
          else:
             val = float(terrain[y, x])
-            terrain[y, x] = tile(val, tex)
+            norm = mag / (sz / 2)
+            offset = norm
+            #curve = val + 0.1*mag/sz + 0.9*(mag/sz)**3
+            mat = tile(val, 0.325*offset)
+
+         terrain[y, x] = tex[mat]
+
    return terrain
 
 def render(mats, path):
@@ -136,7 +152,7 @@ def fractal(terrain, path):
    frac = (256*terrain).astype(np.uint8)
    imsave(path, terrain)
 
-nMaps, sz = 10, 64 + 16
+nMaps, sz = 12, 128 + 16
 #nMaps, sz = 1, 512 + 16
 seeds = np.linspace(0, 2**32, nMaps)
 scale = int(sz / 5)

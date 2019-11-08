@@ -127,6 +127,12 @@ class Stimulus(Config):
                self.default = config.IMMUNE
                self.max     = config.IMMUNE
 
+         class Wilderness(node.Continuous):
+            def init(self, config):
+               self.default = -1
+               self.min     = -1
+               self.max     = 126
+
    class Tile(Config):
       #A multiplicative interaction between pos and index
       #is required at small training scale

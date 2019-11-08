@@ -9,9 +9,9 @@ class Config:
    ROOT = 'resource/maps/procedural/map'
    SUFFIX = '/map.tmx'
 
-   SZ = 62
-   BORDER = 9
-   R = C = SZ + BORDER
+   SZ = 128
+   BORDER = 8
+   R = C = SZ + 2*BORDER
 
    STIM = 7
    WINDOW = 2*STIM + 1
@@ -41,21 +41,14 @@ class Config:
    RANGERANGE = 2
    MAGERANGE  = 3
 
-   #MELEEDAMAGE = 10
-   #RANGEDAMAGE = 2
-   #MAGEDAMAGE  = 1
-
    def __init__(self, **kwargs):
       for k, v in kwargs.items():
          setattr(self, k, v)
 
    def SPAWN(self):
-      R, C = Config.R, Config.C
-      spawn, border, sz = [], Config.BORDER, Config.SZ
-      spawn += [(border, border+i) for i in range(sz)]
-      spawn += [(border+i, border) for i in range(sz)]
-      spawn += [(R-1, border+i) for i in range(sz)]
-      spawn += [(border+i, C-1) for i in range(sz)]
+      R, C = int(Config.R/2), int(Config.C/2)
+      spawn = [(R-3, C), (R+3, C), (R, C-3), (R, C+3),
+         (R+3, C+3), (R-3, C+3), (R+3, C+3), (R+3, C-3)]
       idx = np.random.randint(0, len(spawn))
       return spawn[idx]
 

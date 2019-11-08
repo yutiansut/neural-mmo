@@ -134,12 +134,16 @@ class Attack(Node):
       R, C = R//2, C//2
       #R, C = entity.pos
 
-      #return [entity]
-      rets = []
+      rets = set([entity])
       for r in range(R-N, R+N+1):
          for c in range(C-N, C+N+1):
             for e in stim[r, c].ents.values():
-               rets.append(e)
+               minWilderness = min(entity.status.wilderness.val, e.status.wilderness.val)
+
+               selfLevel = combat.level(entity.skills)
+               targLevel = combat.level(e.skills)
+               if abs(selfLevel - targLevel) <= minWilderness:
+                  rets.add(e)
       return rets
 
    def l1(pos, cent):
