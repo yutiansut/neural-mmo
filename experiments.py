@@ -29,10 +29,11 @@ class Config(config.Config):
    ENTROPY = 0.0 #Entropy bonus for policy gradient loss
 
    HIDDEN  = 32 #Model embedding dimension
-   EMBED   = 32  #Model hidden dimension
+   EMBED   = 32 #Model hidden dimension
  
-   NGOD   = 12 #Number of environment servers
-   NSWORD = 1 #Number of clients per server
+   NCORE  = 6  #Number of environment servers
+   NGOD   = 78 #Number of environment servers
+   NSWORD = 1  #Number of clients per server
 
    #Number of experience steps before
    #syncronizing at each hardware layer
