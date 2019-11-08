@@ -14,7 +14,7 @@ PREFIX_CMD = 'ray stop; ray start'
 
 #ray stop; ray start --head --redis-port=6379 --num-cpus=0
 SERVER_CMD = ' '.join([
-      'ray stop; bash ~/longjob -u jsuarez -k ~/keytab ray start',
+      'ray stop; MKL_NUM_THREADS=1 OMP_NUM_THREADS=1 ray start',
       '--head', 
       '--redis-port='+PORT,
       '--num-cpus=0'
@@ -23,7 +23,7 @@ SERVER_CMD = ' '.join([
 #parallel-ssh -h hosts.txt -P -i "ray stop; ray start --block --address=vision33:6379 --num-cpus=12"
 CLIENT_CMD = ' '.join([
       'parallel-ssh --host', client, '-P -i',
-      '"' + 'ray stop; bash ~/longjob -u jsuarez -k ~/keytab ray start',
+      '"' + 'ray stop; bash ~/longjob -u jsuarez -k ~/jsuarez.keytab MKL_NUM_THREADS=1 OMP_NUM_THREADS=1 ray start',
       '--block',
       '--address='+server+':'+PORT,
       '--num-cpus='+str(Config.NGOD) 
